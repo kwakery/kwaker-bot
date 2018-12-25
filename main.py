@@ -6,7 +6,9 @@ client = discord.Client()
 @client.event
 async def on_ready():
     print("Kwaker Bot v0.1")
-    await client.change_presence(game=discord.Game(name="kwakery"))
+    game = discord.Game("kwakery")
+    stream = discord.Streaming(name="kwaker-bot v0.1", url="https://twitch.tv/kwakery", twitch_name="kwakery")
+    await client.change_presence(activity=stream)
 
 @client.event
 async def on_message(message):
