@@ -28,5 +28,29 @@ async def on_voice_state_update(before, after):
         if role in after.roles:
             await client.remove_roles(after, role)
 
+@client.event
+async def on_reaction_add(reaction, user):
+    mId = reaction.message.id
+    if mId not in settings.subscriptions:
+        return
+
+    subscription = settings.subscriptions[mId]
+    for sub in subscription:
+        if reaction.emoji.id == sub.id:
+            role = discord.utils.get(user.server.roles, id=sub.rid)
+            await client.add_roles(user, role)
+            break
+
+
+
+@client.event
+async def on_reaction_remove(reaction, user):
+    print("test")
+    for subscription in settings.subscriptions:
+        if user.server.id != subscription.sid:
+            continue
+
+        role = discord.utils.get(user.server.roles, id=subscription.rid)
+        await client.add_roles(user, role)
 
 client.run(settings.discord['token'])
