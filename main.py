@@ -18,37 +18,18 @@ async def on_message(message):
     #     await client.send_message(message.channel, "World")
 
 @client.event
-async def on_voice_state_update(before, after):
-    if after.server.id != "522607015336476683":
+async def on_voice_state_update(user, before, after):
+    # print(discord.utils.get(user.guild.roles, name="Music").id)
+    if user.guild.id != 522607015336476683:
         return
 
-    role = discord.utils.get(after.server.roles, name="Music") # Get "Music" role object
+    role = user.guild.get_role(526952431297232906) # Get "Music" role object
 
-    if after.voice_channel != None and after.voice_channel.id == "526968501903163413":
-        await client.add_roles(after, role)
+    if after.channel != None and after.channel.id == 526968501903163413:
+        await user.add_roles(role)
     else:
-        if role in after.roles:
-            await client.remove_roles(after, role)
-
-@client.event
-async def on_raw_reaction_add(event):
-    print("test0")
-    mId = event.message_id
-    if mId not in settings.subscriptions:
-        return
-    print("test1")
-    subscription = settings.subscriptions[mId]
-    for sub in subscription:
-        print("test2")
-        if event.emoji.id == sub.id:
-            print("test3")
-            guild = client.TextChannel(id=event.channel_id).guild
-            role = guild.get_role(sub.rid)
-            print("test4")
-            await client.add_roles(user, role, reason="User requested via reaction")
-            break
-
-
+        if role in user.roles:
+            await user.remove_roles(role)
 
 @client.event
 async def on_raw_reaction_add(event):
@@ -57,12 +38,32 @@ async def on_raw_reaction_add(event):
         return
 
     subscription = settings.subscriptions[mId]
+
     for sub in subscription:
         if event.emoji.id == sub.id:
-            guild = client.TextChannel(id=event.channel_id).guild
+            guild = client.get_guild(event.guild_id)
+            user = guild.get_member(event.user_id)
             role = guild.get_role(sub.rid)
 
-            await client.remove_roles(user, role, reason="User requested via reaction")
+            await user.add_roles(role, reason="User requested via reaction")
             break
+
+@client.event
+async def on_raw_reaction_remove(event):
+    mId = event.message_id
+    if mId not in settings.subscriptions:
+        return
+
+    subscription = settings.subscriptions[mId]
+
+    for sub in subscription:
+        if event.emoji.id == sub.id:
+            guild = client.get_guild(event.guild_id)
+            user = guild.get_member(event.user_id)
+            role = guild.get_role(sub.rid)
+
+            await user.remove_roles(role, reason="User requested via reaction")
+            break
+
 
 client.run(settings.discord['token'])
